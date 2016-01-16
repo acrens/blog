@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>form自动提交情况</title>
+    <style>
+    html,
+    body {
+        margin: 0;
+        padding: 0;
+    }
+    
+    section {
+        margin: 20px auto 0;
+    }
+    
+    .text-center {
+        text-align: center;
+    }
+    </style>
+</head>
+
+<body>
+    <section class="text-center">
+        <h2>本demo演示在文本框中按enter键是否触发提交表单</h2>
+    </section>
+
+    <!-- form里有一个type="submit"的按钮，回车键生效 -->
+    <section class="text-center">
+        <h4>form表单里有type为submit的按钮存在，一个文本框还是多个文本框都提交生效</h4>
+        <form action="http://www.baidu.com">
+            <input type="text" name="params">
+            <input type="submit" value="提交">
+        </form>
+        <form action="http://www.baidu.com">
+            <input type="text" name="params1">
+            <input type="text" name="params2">
+            <input type="submit" value="提交">
+        </form>
+    </section>
+
+    <!--  form表单里面只有一个type="text"的input,不管按钮是什么type,回车键生效 -->
+    <section class="text-center">
+        <h4>form表单里面只有一个type="text"的input,不管按钮是什么type,回车键生效</h4>
+        <form action="http://www.baidu.com">
+            <input type="text" name="params">
+            <input type="button" value="提交">
+        </form>
+    </section>
+
+    <!--  按钮不是input,而是用button,并且没有加type,IE下默认为type=button,FireFox、chrome默认为type=submit -->
+    <section class="text-center">
+        <h4>按钮不是input,而是用button,并且没有加type,IE下默认为type=button,FX默认为type=submit</h4>
+        <form action="http://www.baidu.com">
+            <input type="text" name="params1">
+            <input type="text" name="params2">
+            <button>提交</button>
+        </form>
+    </section>
+
+    <!-- 其它表单元素如textarea、select不影响，radio checkbox不影响触发规则，但本身在FX下会响应回车键，在IE下不响应 -->
+    <section class="text-center">
+        <h4>其它表单元素如textarea、select不影响，radio checkbox不影响触发规则，但本身在FireFox下会响应回车键，在IE下不响应</h4>
+        <form action="http://www.baidu.com">
+            <input type="text" name="params1">
+            <input type="radio" name="params2">
+            <input type="checkbox" name="params3">
+            <input type="button" value="提交">
+        </form>
+    </section>
+
+    <!-- type="image"的input,效果等同于type="submit" -->
+    <section class="text-center">
+        <h4>type="image"的input,效果等同于type="submit"</h4>
+        <form action="http://www.baidu.com">
+            <input type="text" name="params1">
+            <input type="text" name="params3">
+            <input type="image" name="params2" value="上传图片">
+            <input type="button" value="提交">
+        </form>
+    </section>
+</body>
+
+</html>
