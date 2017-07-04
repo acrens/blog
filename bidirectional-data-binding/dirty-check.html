@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>data-binding-dirty-check - 通过脏值检测实现双向数据绑定</title>
+</head>
+
+<body>
+    <input v-event="value" v-bind="val" type="text" id="J-in">
+    <div v-event="text" v-bind="val" id="J-out"></div>
+
+    <script>
+    /**
+     * 通过数据劫持实现双向数据绑定（调用 Object.defineProperty 函数，注：IE8+ 支持）
+     */
+    const Due = function() {
+        this.init();
+    };
+
+    Due.prototype = {
+        /**
+         * 绑定节点
+         */
+        elements: [document.getElementById('J-out'), document.getElementById('J-in')],
+
+        /**
+         * 绑定数据
+         */
+        data: {
+            val: 'hello world!!!'
+        },
+
+        /**
+         * 执行 UI 更新
+         */
+        command: {
+            text(str) {
+                this.innerHTML = str;
+            },
+            value(str) {
+                this.setAttribute('value', str);
+            }
+        },
+
+        /**
+         * 初始化
+         */
+        init() {
+            const that = this;
+            that.scan();
+            that.bindEvents();
+        },
+
+        /**
+         * 数据绑定监听
+         */
+        bindEvents() {
+            const that = this;
+            if (document.addEventListener) {
+                that.elements[1].addEventListener('keyup', (e) => {
+                    that.data.val = e.target.value;
+                    that.digest();
+                }, false);
+            } else {
+                that.elements[1].attachEvent('onkeyup', (e) => {
+                    that.data.val = e.target.value;
+                    that.digest();
+                }, false);
+            }
+
+            setTimeout(() => {
+                that.data.val = 'fuck world!!!';
+
+                // 启动脏值检测
+                that.digest();
+            }, 1000);
+        },
+
+        /**
+         * 脏值检测
+         */
+        digest() {
+            const that = this;
+            for (let i = 0, len = that.elements.length; i < len; i++) {
+                const elem = that.elements[i];
+
+                for (let j = 0, len1 = elem.attributes.length; j < len1; j++) {
+                    const attr = elem.attributes[j];
+
+                    if (attr.nodeName.indexOf('v-event') >= 0) {
+                        const dataKey = elem.getAttribute('v-bind') || undefined;
+
+                        /**
+                         * 进行脏数据检测，如果数据改变，则重新执行指令，否则跳过
+                         */
+                        if(elem.command[attr.nodeValue] !== that.data[dataKey]){
+                            that.command[attr.nodeValue].call(elem, that.data[dataKey]);
+                            elem.command[attr.nodeValue] = that.data[dataKey];
+                        }
+                    }
+                }
+            }
+        },
+
+        /**
+         * 扫描带指令的节点属性
+         */
+        scan() {
+            const that = this;
+            for (let i = 0, len = that.elements.length; i < len; i++) {
+                const elem = that.elements[i];
+                elem.command = {};
+
+                for (let j = 0, len1 = elem.attributes.length; j < len1; j++) {
+                    const attr = elem.attributes[j];
+
+                    if (attr.nodeName.indexOf('v-event') >= 0) {
+                        const dataKey = elem.getAttribute('v-bind') || undefined;
+                        that.command[attr.nodeValue].call(elem, that.data[dataKey]);
+                        elem.command[attr.nodeValue] = that.data[dataKey];
+                    }
+                }
+            }
+        }
+    };
+
+    new Due();
+    </script>
+</body>
+
+</html>
