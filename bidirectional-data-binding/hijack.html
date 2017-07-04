@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>data-binding-hijacking - 通过数据劫持实现双向数据绑定</title>
+</head>
+
+<body>
+    <input v-value="val" type="text" id="J-in">
+    <div v-text="val" id="J-out"></div>
+
+    <script>
+    /**
+     * 通过数据劫持实现双向数据绑定（调用 Object.defineProperty 函数，注：IE8+ 支持）
+     */
+    const Due = function() {
+        this.init();
+    };
+
+    Due.prototype = {
+        /**
+         * 绑定节点
+         */
+        elements: [document.getElementById('J-out'), document.getElementById('J-in')],
+
+        /**
+         * 绑定数据
+         */
+        data: {
+            val: 'hello world!!!'
+        },
+
+        /**
+         * 执行 UI 更新
+         */
+        command: {
+            text(str) {
+                this.innerHTML = str;
+            },
+            value(str) {
+                this.setAttribute('value', str);
+            }
+        },
+
+        /**
+         * 初始化
+         */
+        init() {
+            const that = this;
+            that.scan();
+            that.defineGetAndSet(that.data, 'val');
+            that.bindEvents();
+        },
+
+        /**
+         * 数据绑定监听
+         */
+        bindEvents() {
+            const that = this;
+            if (document.addEventListener) {
+                that.elements[1].addEventListener('keyup', (e) => {
+                    that.data.val = e.target.value;
+                }, false);
+            } else {
+                that.elements[1].attachEvent('onkeyup', (e) => {
+                    that.data.val = e.target.value;
+                }, false);
+            }
+
+            setTimeout(() => {
+                that.data.val = 'fuck world!!!';
+            }, 1000);
+        },
+
+        /**
+         * 扫描带指令的节点属性
+         */
+        scan() {
+            const that = this;
+            for (let i = 0, len = that.elements.length; i < len; i++) {
+                const elem = that.elements[i];
+                elem.command = [];
+
+                for (let j = 0, len1 = elem.attributes.length; j < len1; j++) {
+                    const attr = elem.attributes[j];
+
+                    if (attr.nodeName.indexOf('v-') >= 0) {
+                        that.command[attr.nodeName.slice(2)].call(elem, that.data[attr.nodeValue]);
+                        elem.command.push(attr.nodeName.slice(2));
+                    }
+                }
+            }
+        },
+
+        /**
+         * 定义属性设置劫持
+         */
+        defineGetAndSet(obj, propName) {
+            const that = this;
+            let bValue;
+            try {
+                Object.defineProperty(obj, propName, {
+                    get() {
+                        return bValue;
+                    },
+                    set(newValue) {
+                        bValue = newValue;
+                        that.scan();
+                    },
+                    enumerable: true,
+                    configurable: true
+                });
+            } catch (error) {
+                console.log("browser not supported.");
+            }
+        }
+    };
+
+    new Due();
+    </script>
+</body>
+
+</html>
